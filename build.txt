@@ -1,0 +1,3 @@
+displayName = AdvancedEyeOfCthulhu
+author = Lokiel Reed
+version = 0.1
