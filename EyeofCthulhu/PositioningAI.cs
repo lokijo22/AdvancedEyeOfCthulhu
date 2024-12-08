@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.UI;
 
 public class PositioningAI
 {
@@ -18,6 +19,12 @@ public class PositioningAI
     {
         // run methods for a specific mode to update values
         TrackTarget(npc);
+        Vector2 playerVelocityVector = Main.player[npc.target].velocity;
+
+        // calculate length of the hypotonuse to get accurate velocity
+        float velocity = (float)Math.Sqrt(Math.Pow(playerVelocityVector.X, 2) + Math.Pow(playerVelocityVector.Y, 2));
+
+        MoveForward(npc, Math.Abs(velocity) + 1.5f);
     }
 
     private void Rotate(float radians)
@@ -98,6 +105,65 @@ public class PositioningAI
         if (rotation < 0)
         {
             rotation += (float)(2 * Math.PI);
+        }
+    }
+
+    // gives the Eye velocity in the direction it is currently facing
+    private void MoveForward(NPC npc, float speed)
+    {   
+        float xVelocity;
+        // calculate x velocity
+        if (npc.rotation < Math.PI)
+        {
+            // calculate negative x velocity
+            xVelocity = -Linear_Gradient(0, npc.rotation, speed);
+        }
+        else if (npc.rotation > Math.PI)
+        {
+            // Calculate positive x velocity
+            xVelocity = Linear_Gradient(2, npc.rotation, speed);
+        }
+        else
+        {
+            xVelocity = 0f;
+        }
+
+        float yVelocity;
+        // calculate y velocity
+        if (npc.rotation < Math.PI)
+        {
+            // calculate negative y velocity
+            yVelocity = -Linear_Gradient(1, npc.rotation, speed);
+        }
+        else if (npc.rotation > Math.PI)
+        {
+            // Calculate positive y velocity
+            yVelocity = Linear_Gradient(3, npc.rotation, speed);
+        }
+        else
+        {
+            yVelocity = 0f;
+        }
+
+        npc.velocity = new Vector2(xVelocity, yVelocity);
+    }
+
+    private float Linear_Gradient(int side, float rotation, float speed)
+    {
+        float pi = (float)Math.PI;
+
+        // rotation converted relatively to base case 0 - pi
+        rotation -= (pi / 2) * side;
+        
+        // add logic here to verify the selection size is exactly pi and side is 
+        if (rotation > pi/2 && rotation < pi)
+        {
+            return speed * (pi - rotation) / (pi /2);
+        }
+        else
+        {
+
+            return speed * (rotation / (pi /2));
         }
     }
 }
