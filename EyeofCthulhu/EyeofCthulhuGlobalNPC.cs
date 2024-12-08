@@ -13,6 +13,11 @@ It is called now to handle the behavior of mobs with the given ID.
 */
 public class EyeofCthulhuGlobalNPC : GlobalNPC
 {
+
+    private static int ticksPassed;
+    private static TargetingAI targetingai = new TargetingAI();
+
+
     // potentially create a list to access active copies of this ai
     public override bool AppliesToEntity(NPC npc, bool lateInstantiation)
     {
@@ -32,20 +37,49 @@ public class EyeofCthulhuGlobalNPC : GlobalNPC
     // this should make it so only this function is called for every instance of npc
     public override void PostAI(NPC npc)
     {
-        npc.TargetClosest();
+        ticksPassed ++;
 
-        if (npc.HasValidTarget)
+        bool hasValidTarget = targetingai.TargetClosestPlayer(npc);
+
+        if (hasValidTarget)
         {   
-            LookAtTarget(npc);
+            // get the rotation that the eye must be in to face the player
+            float targetRotation = GetRotationToTarget(npc);
+
+            //NormalizeRotation(ref targetRotation);
+            //NormalizeRotation(ref npc.rotation);
+
+            // get the difference between current rotation and target rotation
+            float difference = targetRotation - npc.rotation;
+
+            Main.NewText("Tick - " + ticksPassed.ToString() + ", Target Rotation: " + targetRotation.ToString());
+            Main.NewText("Tick - " + ticksPassed.ToString() + ", Difference: " +difference.ToString());
+
+            float adjustment = difference;
+
+            if (difference > (float)Math.PI)
+            {
+                adjustment -= (float)(Math.PI * 2);
+            }
+
+            Main.NewText("Tick - " + ticksPassed.ToString() + ", Adjustment: " + adjustment.ToString());
+
+            // 50 is lazy
+            // 25 is slow
+            // 15 is normal
+            // 10 is quick
+            // 5 is locked on
+            
+            npc.rotation += adjustment/15;
         }
         else
         {
-            npc.rotation += .005f;
+            npc.rotation += .015f;
         }
         
     }
 
-    private void LookAtTarget(NPC npc)
+    private float GetRotationToTarget(NPC npc)
     {
         Player targetPlayer = Main.player[npc.target];
 
@@ -55,15 +89,36 @@ public class EyeofCthulhuGlobalNPC : GlobalNPC
         
         Vector2 relativePosition = playerCenter - npcCenter;
         
-        npc.rotation = (float)Math.Atan2(relativePosition.Y, relativePosition.X) - (float)(Math.PI/2);
+        // find the angle using arctan. then add a 90 deg offest bc of the orientation of the sprite
+        float rotation = (float)Math.Atan2(relativePosition.Y, relativePosition.X) - (float)(Math.PI/2);
 
-        Main.NewText("Player center found at " + playerCenter.ToString(), Color.Blue);
+        if (rotation < 0)
+        {
+            rotation += (float)(Math.PI*2);
+        }
 
-        Main.NewText("Relative Position: " + relativePosition.ToString(), Color.Cyan);
+        return rotation;
 
-        Main.NewText(npc.rotation);
+        //Main.NewText("Player center found at " + playerCenter.ToString(), Color.Blue);
+
+        //Main.NewText("Relative Position: " + relativePosition.ToString(), Color.Cyan);
+
+        //Main.NewText(npc.rotation);
         
     }
+
+    private void NormalizeRotation(ref float rotation)
+    {
+        // Ensure the rotation value is between -2π and 2π
+        rotation %= (float)(2 * Math.PI);
+
+        // Convert negative values to their positive equivalent
+        if (rotation < 0)
+        {
+            rotation += (float)(2 * Math.PI);
+        }
+    }
+
 
     private Vector2 GetSpriteCenter(Vector2 spritePosition, int spriteWidth, int spriteHeight)
     {
