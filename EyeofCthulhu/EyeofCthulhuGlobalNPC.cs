@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
@@ -13,10 +15,28 @@ It is called now to handle the behavior of mobs with the given ID.
 */
 public class EyeofCthulhuGlobalNPC : GlobalNPC
 {
-
+    private static List<NPC> npcs = [];
+    private static List<EyeofCthuluState> states = [];
+    public static Random random = new Random();
+    private static EyeofCthuluState[] possibleStates;
+    private static EyeofCthuluState state;
     private static int ticksPassed;
-    private static TargetingAI targetingai = new TargetingAI();
-    private static PositioningAI positioningai = new PositioningAI();
+    public static TargetingAI targetingai = new TargetingAI();
+    public static PositioningAI positioningai = new PositioningAI();
+
+    public EyeofCthulhuGlobalNPC() : base() {
+        possibleStates = new EyeofCthuluState[]
+        {
+            new DashingState(this),
+            new GlaringState(this),
+            new ObserveState(this),
+            new PersueState(this),
+            new SummoningState(this)
+        };
+
+        state = possibleStates[random.Next(0,4)];
+        Main.NewText(state.ToString());
+    }
 
 
     // potentially create a list to access active copies of this ai
@@ -42,36 +62,21 @@ public class EyeofCthulhuGlobalNPC : GlobalNPC
     {
         ticksPassed ++;
 
-        bool hasValidTarget = targetingai.TargetClosestPlayer(npc);
-
-        if (hasValidTarget)
-        {   
-            positioningai.Update(npc);
-        }
-        else
-        {
-            npc.rotation += .015f;
-        }
+        state.AI(npc);
         
     }
 
     public override void OnKill(NPC npc)
     {
-
-        // Send a message to the console
-        Main.NewText("Eye of Cthulhu has been Defeated", Color.Red);
-
-        // call GlobalNPC class OnKill() - does nothing
-        base.OnKill(npc);
+        // forget this npc
+        Main.NewText(npcs.Remove(npc));
+        Main.NewText("There are " + npcs.Count.ToString() + " Eyes of Cthulhu");
     }
 
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
-
-        // Send a message to the console
-        Main.NewText("The Eye of Cthulhu has Awoken!", Color.Red);
-
-        // call GlobalNPC OnSpawn() - does nothing
-        base.OnSpawn(npc, source);
+        // new npc to keep track of
+        npcs.Add(npc);
+        Main.NewText("There are " + npcs.Count.ToString() + " Eyes of Cthulhu");
     }
 }

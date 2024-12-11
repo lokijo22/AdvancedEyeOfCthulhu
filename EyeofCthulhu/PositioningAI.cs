@@ -1,11 +1,13 @@
 using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
 
+// This class aims to control all aspects of movement and rotation of the Eye
 public class PositioningAI
 {
     private enum trackingMode{
@@ -15,26 +17,31 @@ public class PositioningAI
         QUICK = 10,
         LOCKED_ON = 5
     }
-    public void Update(NPC npc, int mode = 0, bool debug = false)
+    public void Update(NPC npc, bool debug = false)
     {
         // run methods for a specific mode to update values
         TrackTarget(npc);
-        Vector2 playerVelocityVector = Main.player[npc.target].velocity;
+        Player player = Main.player[npc.target];
 
         // calculate length of the hypotonuse to get accurate velocity
-        float velocity = (float)Math.Sqrt(Math.Pow(playerVelocityVector.X, 2) + Math.Pow(playerVelocityVector.Y, 2));
+        float velocity = (float)Math.Sqrt(Math.Pow(player.velocity.X, 2) + Math.Pow(player.velocity.Y, 2));
 
-        MoveForward(npc, Math.Abs(velocity) + 1.5f);
+        float  oldVelocity = (float)Math.Sqrt(Math.Pow(player.oldVelocity.X, 2) + Math.Pow(player.oldVelocity.Y, 2));
+
+        MoveForward(npc, Math.Max(Math.Abs(velocity) + 1.5f, Math.Max(Math.Abs(oldVelocity - 0.01f), 5f)));
+    }
+
+    public void SetMode(NPC npc, int mode)
+    {
+        /*
+        minDistance - maintin distance from target, tries to stay farther than give units away
+        *maxDistance - dont go farther than this distance away 
+        */
     }
 
     private void Rotate(float radians)
     {
         // rotate sprite by given radians
-    }
-
-    public void setMode()
-    {
-        // set or change mode
     }
 
     private void TrackTarget(NPC npc, bool debug = false)

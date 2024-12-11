@@ -5,6 +5,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
+// This class aims to control all aspects of Finding Targets 
 public class TargetingAI
 {
     // Takes in an EyeOfCthulu and returns whether or not it was able to find a valid target
